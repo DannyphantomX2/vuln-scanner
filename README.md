@@ -1,5 +1,7 @@
 # PyVulnScan
+## Demo
 
+[![asciicast](https://asciinema.org/a/JZ93bhQoyNiemSAv.svg)](https://asciinema.org/a/JZ93bhQoyNiemSAv)
 A lightweight Python CLI vulnerability scanner that combines port scanning, banner grabbing, CVE mapping, and PDF report generation into a single pipeline.
 
 ---
