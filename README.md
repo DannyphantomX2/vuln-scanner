@@ -34,7 +34,32 @@ python3 -m venv venv
 source venv/bin/activate
 
 # Install dependencies
-pip install reportlab
+make install
+```
+
+---
+
+## Makefile Usage
+
+The included `Makefile` simplifies common tasks:
+
+| Command         | Description                                     |
+|-----------------|-------------------------------------------------|
+| `make install`  | Installs required dependencies from `requirements.txt`. |
+| `make run`      | Runs a scan with default settings.              |
+| `make clean`    | Removes all generated `scan_*.pdf` and `scan_*.json` report files. |
+
+You can customize scans by passing variables to `make run`:
+
+```bash
+# Scan a specific target and port range
+make run TARGET=192.168.1.1 PORTS=80,443,8080
+
+# Run a verbose scan on a subnet
+make run TARGET=10.0.0.0/24 PORTS=1-1024 --verbose
+
+# Export the scan results to a JSON file
+make run JSON=true
 ```
 
 ---
@@ -45,6 +70,12 @@ pip install reportlab
 
 ```bash
 python3 main.py --target 127.0.0.1
+```
+
+### Export to JSON
+
+```bash
+python3 main.py --target 127.0.0.1 --json
 ```
 
 ### Full scan with custom port range and thread count
@@ -73,11 +104,11 @@ python3 main.py --target 192.168.1.0/24 --ports 21-443 --threads 200 --verbose
 | `--ports`   | Port range to scan                   | `1-1024`  |
 | `--threads` | Number of concurrent threads         | `100`     |
 | `--verbose` | Print closed ports and CVE IDs       | `False`   |
+| `--json`    | Export results to a JSON file        | `False`   |
 
 ---
 
 ## Sample Output
-
 ```
 Target : 127.0.0.1
 Ports  : 1-1024 (1024 ports)
@@ -125,13 +156,13 @@ pyvulnscan/
 ├── banner.py        # Socket-based banner grabber
 ├── cve_mapper.py    # CVE lookup against local database
 ├── cve_db.json      # Local CVE database
-└── report.py        # PDF report generator
+├── report.py        # PDF report generator
+└── export.py        # JSON report generator
 ```
 
 ---
 
 ## Tech Stack
-
 | Component        | Library / Tool          |
 |------------------|-------------------------|
 | Port scanning    | `socket`, `threading`   |

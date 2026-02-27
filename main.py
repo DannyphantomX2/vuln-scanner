@@ -4,26 +4,36 @@ import argparse
 import os
 import sys
 
-from scanner import run_scan, parse_ports
-from banner import grab_banner
-from cve_mapper import map_cve
-from report import generate_report
+from scanner.banner import grab_banner
+from scanner.cve_mapper import map_cve
+from scanner.export import export_to_json
+from scanner.report import generate_report
+from scanner.scanner import parse_ports, run_scan
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Port scanner with banner grabbing and CVE mapping")
+    parser = argparse.ArgumentParser(
+        description="Port scanner with banner grabbing and CVE mapping"
+    )
     parser.add_argument("--target", required=True, help="IP address or CIDR range")
     parser.add_argument("--ports", default="1-1024", help="Port range (e.g. 1-1024)")
-    parser.add_argument("--threads", type=int, default=100, help="Number of threads (default: 100)")
-    parser.add_argument("--verbose", action="store_true", help="Print closed/error ports")
+    parser.add_argument(
+        "--threads", type=int, default=100, help="Number of threads (default: 100)"
+    )
+    parser.add_argument(
+        "--verbose", action="store_true", help="Print closed/error ports"
+    )
+    parser.add_argument(
+        "--json", action="store_true", help="Export results to JSON file"
+    )
     return parser.parse_args()
 
 
 def print_summary(results: list[dict]):
-    col_port    = 7
+    col_port = 7
     col_service = 12
-    col_banner  = 52
-    col_cves    = 6
+    col_banner = 52
+    col_cves = 6
 
     header = (
         f"{'PORT':<{col_port}}"
@@ -38,8 +48,8 @@ def print_summary(results: list[dict]):
     print(divider)
 
     for r in sorted(results, key=lambda x: x["port"]):
-        port    = f"{r['port']}/tcp"
-        service = r["service"][:col_service - 1]
+        port = f"{r['port']}/tcp"
+        service = r["service"][: col_service - 1]
         preview = (r["banner"] or "")[:50]
         cve_count = len(r["cves"])
 
@@ -72,24 +82,28 @@ def main():
 
     print("\nGrabbing banners and mapping CVEs ...")
     for entry in open_ports:
-        host    = entry["host"]
-        port    = entry["port"]
+        host = entry["host"]
+        port = entry["port"]
         service = entry["service"]
 
         banner = grab_banner(host, port)
-        cves   = map_cve(banner) if banner else []
+        cves = map_cve(banner) if banner else []
 
         if args.verbose:
             cve_ids = ", ".join(c["cve_id"] for c in cves) if cves else "none"
-            print(f"  {host}:{port}  banner={'yes' if banner else 'none'}  cves={cve_ids}")
+            print(
+                f"  {host}:{port}  banner={'yes' if banner else 'none'}  cves={cve_ids}"
+            )
 
-        scan_results.append({
-            "host":    host,
-            "port":    port,
-            "service": service,
-            "banner":  banner,
-            "cves":    cves,
-        })
+        scan_results.append(
+            {
+                "host": host,
+                "port": port,
+                "service": service,
+                "banner": banner,
+                "cves": cves,
+            }
+        )
 
     print_summary(scan_results)
 
@@ -99,6 +113,10 @@ def main():
 
     report_file = generate_report(args.target, scan_results)
     print(f"Report saved: {os.path.basename(report_file)}")
+
+    if args.json:
+        json_report_file = export_to_json(args.target, scan_results)
+        print(f"JSON report saved: {os.path.basename(json_report_file)}")
 
     return scan_results
 
